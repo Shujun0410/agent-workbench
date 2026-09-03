@@ -1,0 +1,18 @@
+name: self-check
+on: [push, pull_request]
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+      - name: modules import cleanly (no third-party deps)
+        run: python -c "import store, orchestrator, runners, server; print('ok')"
+      - name: synthetic workload runs without any local data
+        run: DATA_DIR=/nonexistent python job_factor_scan.py 0 24 | tail -3
+      - name: minimax worker fails closed without a key
+        run: |
+          set +e; python job_llm_minimax.py "ping"; code=$?; set -e
+          test "$code" -eq 2 && echo "fail-closed OK (exit 2)"
