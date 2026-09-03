@@ -65,6 +65,7 @@ button.pri{background:var(--run);border-color:var(--run);color:#fff}
     <div class="sub" id="meta">尚未开始</div></div>
   <div style="display:flex;gap:.5rem">
     <button class="pri" onclick="launch()">开始一次运行</button>
+    <button onclick="launchLLM()" title="需要 MINIMAX_API_KEY">跑 6 个真实 LLM agent</button>
     <button onclick="load()">刷新</button>
   </div>
 </header>
@@ -72,7 +73,7 @@ button.pri{background:var(--run);border-color:var(--run);color:#fff}
 <div class="grid" id="grid"></div>
 <div class="note">
   <b>这个界面在解决什么：</b>并行跑十几个 agent 时，日志会互相刷屏，人看不出谁在做什么、谁卡住了。
-  所以这里不显示日志流，显示<b>状态</b>——每个 agent 一格，颜色即状态；超过 8 秒没有新输出会被标为
+  所以这里不显示日志流，显示<b>状态</b>——每个 agent 一格，颜色即状态；超过阈值（LLM 场景建议 20 秒）没有新输出会被标为
   <b style="color:var(--stall)">卡住</b>，而不是等它超时；点开任意一格可以<b>只中止或只重试这一个</b>，其余不受影响；
   每一格都保留完整时间线，事后能回看它在哪一步出的问题。
 </div>
@@ -102,6 +103,7 @@ async function load(){
   if(sel) drawer(sel);
 }
 async function launch(){ await j('/api/launch?n=24&p=6'); setTimeout(load,600); }
+async function launchLLM(){ await j('/api/launch?p=3&runner=minimax'); setTimeout(load,600); }
 async function act(a){ if(!sel)return; await j(`/api/act?run=${S.run.run_id}&agent=${sel}&do=${a}`); setTimeout(load,400); }
 
 function render(){

@@ -9,13 +9,27 @@ import store, orchestrator, runners
 PORT = 8777
 _current = {"run_id": None}
 
-def launch(n_shards=24, parallel=6):
+LLM_TASKS = [
+    "用三句话解释什么是 walk-forward 验证，以及它防的是哪种自欺。",
+    "一个回测年化 20% 但胜率只有 32%，这在说明什么？给两个可能。",
+    "解释「生存者偏差」在股票回测里的具体表现，一个例子。",
+    "什么是前视偏差？举一个候选池构建时容易犯的例子。",
+    "为什么并行 agent 系统需要「卡住检测」而不是只靠超时？",
+    "用一句话区分「显示状态」和「显示日志」对人的意义。",
+]
+def launch(n_shards=24, parallel=6, runner="shell"):
     orchestrator.MAX_PARALLEL = parallel
-    subs = [{"id": f"s{i:02d}", "label": f"分片 {i:02d}", "runner": "shell",
-             "cmd": f'cd "{HERE}" && python3 -u job_factor_scan.py {i} {n_shards}'}
-            for i in range(n_shards)]
+    if runner == "minimax":
+        subs = [{"id": f"m{i:02d}", "label": f"LLM {i:02d}", "runner": "minimax", "prompt": t}
+                for i, t in enumerate(LLM_TASKS)]
+        name = "MiniMax M2 · 6 个真实 LLM agent 并行"
+    else:
+        subs = [{"id": f"s{i:02d}", "label": f"分片 {i:02d}", "runner": "shell",
+                 "cmd": f'cd "{HERE}" && python3 -u job_factor_scan.py {i} {n_shards}'}
+                for i in range(n_shards)]
+        name = "全市场因子扫描 · 3,100 只 × 7 年"
     def go():
-        _current["run_id"] = orchestrator.run("全市场因子扫描 · 3,100 只 × 7 年", subs)
+        _current["run_id"] = orchestrator.run(name, subs)
     t = threading.Thread(target=go, daemon=True); t.start()
 
 class H(http.server.SimpleHTTPRequestHandler):
@@ -32,7 +46,7 @@ class H(http.server.SimpleHTTPRequestHandler):
             return self._json(store.timeline(q["run"][0], q["agent"][0]))
         if u.path == "/api/runtimes": return self._json(runners.probe())
         if u.path == "/api/launch":
-            launch(int(q.get("n",[24])[0]), int(q.get("p",[6])[0])); return self._json({"ok":True})
+            launch(int(q.get("n",[24])[0]), int(q.get("p",[6])[0]), q.get("runner",["shell"])[0]); return self._json({"ok":True})
         if u.path == "/api/act":
             orchestrator.request(q["run"][0], q["agent"][0], q["do"][0]); return self._json({"ok":True})
         if u.path == "/": self.path = "/ui.html"

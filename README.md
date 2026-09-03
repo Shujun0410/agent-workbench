@@ -1,5 +1,7 @@
 # Agent 工作台 · Agent Workbench
 
+[![self-check](https://github.com/Shujun0410/agent-workbench/actions/workflows/self-check.yml/badge.svg)](https://github.com/Shujun0410/agent-workbench/actions/workflows/self-check.yml)
+
 *A zero-dependency observability layer for parallel AI agents: state instead of logs, stall detection, per-agent intervention, pluggable runtimes. Python 3.9+ stdlib only.*
 
 > 模型已经能编排几百个子 agent 了，但没有产品解决「人怎么看懂几百个 agent 在干什么」。
@@ -15,7 +17,7 @@
 | **状态而非日志** | 每个 agent 一格，颜色即状态（排队／运行／卡住／完成／失败／已中止）。人扫一眼就知道该看哪个 |
 | **卡住要被主动标记** | 超过 `STALL_SEC` 没有新输出即标为「卡住」，而不是等它超时。一个安静的 agent 和一个死掉的 agent，在日志里长得一样 |
 | **干预必须是单点的** | 可以只中止或只重试某一个 agent，其余不受影响。全局 kill 是最差的补救方式 |
-| **可观测层不该关心 agent 是什么** | 运行时可插拔：`shell` 跑任意命令，`claude` 跑真实 Claude Code agent。契约只有一条——给我一个吐行的进程 |
+| **可观测层不该关心 agent 是什么** | 运行时可插拔：`shell` 跑任意命令，`claude` 跑 Claude Code agent，`minimax` 通过 MiniMax 开放平台跑真实 LLM agent（流式）。契约只有一条——给我一个吐行的进程 |
 
 ## 跑起来
 
@@ -38,6 +40,16 @@ python3 server.py          # → http://127.0.0.1:8777
 [shard 0] 完成 1.2s ｜ 合格 129 ｜ 剔除 1 ｜ 高波(年化>85%) 6
 ```
 
+## 跑真实的 LLM agent
+
+```bash
+export MINIMAX_API_KEY=...            # 开放平台 https://platform.minimaxi.com
+export MINIMAX_MODEL=MiniMax-M2      # 可选；国际站再设 MINIMAX_BASE_URL=https://api.minimax.io/v1
+python3 server.py                    # 界面上点「跑 6 个真实 LLM agent」
+```
+
+`job_llm_minimax.py` 走 OpenAI 兼容的流式接口，按句吐行——所以工作台的「卡住检测」对 LLM 同样成立：模型 20 秒没吐 token 和一个卡死的子进程，在状态板上是同一种颜色。没有 key 时它**拒绝伪造输出**，直接以退出码 2 失败（CI 里专门测这一条）。
+
 ## 文件
 
 ```
@@ -45,7 +57,8 @@ server.py            零依赖 HTTP 服务（标准库 http.server）
 orchestrator.py      并行编排 + 状态机 + 卡住检测 + 单点干预
 runners.py           可插拔运行时（shell / claude），含开跑前可用性探测
 store.py             SQLite 事件存储 —— 单一事实来源，编排器崩了历史仍在
-job_factor_scan.py   真实工作负载：因子扫描 + MA 交叉回测
+job_factor_scan.py   真实工作负载：因子扫描 + MA 交叉回测（无本地数据自动合成回退）
+job_llm_minimax.py   真实 LLM 工作单元：MiniMax 开放平台，流式，fail-closed
 ui.html              工作台界面
 ```
 

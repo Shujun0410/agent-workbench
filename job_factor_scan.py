@@ -5,7 +5,7 @@
 """
 import sys, os, glob, csv, math, time, random
 
-DATA = os.path.expanduser("~/.claude/backtest-data/data7y")
+DATA = os.environ.get("DATA_DIR", os.path.expanduser("~/.claude/backtest-data/data7y"))
 MIN_BARS = 250          # 少于一年数据 → 判定为不合格样本
 
 def load(path):
