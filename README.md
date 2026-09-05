@@ -44,7 +44,7 @@ python3 server.py          # → http://127.0.0.1:8777
 
 ```bash
 export MINIMAX_API_KEY=...            # 开放平台 https://platform.minimaxi.com
-export MINIMAX_MODEL=MiniMax-M2      # 可选；国际站再设 MINIMAX_BASE_URL=https://api.minimax.io/v1
+export MINIMAX_MODEL=MiniMax-M2.7    # 可选：MiniMax-M3 / MiniMax-M2.7-highspeed；国际站再设 MINIMAX_BASE_URL=https://api.minimax.io/v1
 python3 server.py                    # 界面上点「跑 6 个真实 LLM agent」
 ```
 

@@ -5,7 +5,7 @@
 环境变量：
   MINIMAX_API_KEY   必填。缺失即 fail-closed 退出（退出码 2），不伪造输出。
   MINIMAX_BASE_URL  默认 https://api.minimaxi.com/v1（国际站用 https://api.minimax.io/v1）
-  MINIMAX_MODEL     默认 MiniMax-M2
+  MINIMAX_MODEL     默认 MiniMax-M2.7（可选 MiniMax-M3 / MiniMax-M2.7-highspeed，以开放平台「模型概览」为准）
 用法：python3 job_llm_minimax.py "<task prompt>"
 """
 import os, sys, json, time, urllib.request, urllib.error
@@ -15,7 +15,7 @@ def main():
     if not key:
         print("[minimax] MINIMAX_API_KEY 未设置 —— 拒绝伪造输出，退出", flush=True); return 2
     base = os.environ.get("MINIMAX_BASE_URL", "https://api.minimaxi.com/v1").rstrip("/")
-    model = os.environ.get("MINIMAX_MODEL", "MiniMax-M2")
+    model = os.environ.get("MINIMAX_MODEL", "MiniMax-M2.7")
     prompt = sys.argv[1] if len(sys.argv) > 1 else "用三句话说明什么是 walk-forward 验证。"
     body = json.dumps({"model": model, "stream": True,
                        "messages": [{"role": "user", "content": prompt}]}).encode()

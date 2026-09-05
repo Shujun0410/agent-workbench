@@ -22,7 +22,7 @@ def launch(n_shards=24, parallel=6, runner="shell"):
     if runner == "minimax":
         subs = [{"id": f"m{i:02d}", "label": f"LLM {i:02d}", "runner": "minimax", "prompt": t}
                 for i, t in enumerate(LLM_TASKS)]
-        name = "MiniMax M2 · 6 个真实 LLM agent 并行"
+        name = "MiniMax M2.7 · 6 个真实 LLM agent 并行"
     else:
         subs = [{"id": f"s{i:02d}", "label": f"分片 {i:02d}", "runner": "shell",
                  "cmd": f'cd "{HERE}" && python3 -u job_factor_scan.py {i} {n_shards}'}
