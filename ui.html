@@ -120,10 +120,12 @@ function render(){
     <div class="card ${a.state} ${sel===a.agent_id?'sel':''}" onclick="drawer('${a.agent_id}')">
       ${a.state==='running'?'<div class="pulse"></div>':''}
       <div class="top"><span class="id">${a.label}</span><span class="st">${ST[a.state]||a.state}</span></div>
-      <div class="dt">${(a.detail||'').replace(/</g,'&lt;').slice(0,90)}</div>
+      <div class="dt">${lastLine(a.detail).replace(/</g,'&lt;').slice(0,110)}</div>
       <div class="el">${secs(a.started,a.finished)}</div>
     </div>`).join('');
 }
+// 卡片只放最后一行：失败时就是错误本身，完成时就是耗时/字数汇总
+function lastLine(d){const L=(d||'').split('\n').map(x=>x.trim()).filter(Boolean);return L.length?L[L.length-1]:'';}
 async function drawer(id){
   sel=id; const a=(S.agents||[]).find(x=>x.agent_id===id); if(!a)return;
   document.getElementById('drawer').classList.add('open');

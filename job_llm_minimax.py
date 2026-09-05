@@ -8,7 +8,7 @@
   MINIMAX_MODEL     默认 MiniMax-M2.7（可选 MiniMax-M3 / MiniMax-M2.7-highspeed，以开放平台「模型概览」为准）
 用法：python3 job_llm_minimax.py "<task prompt>"
 """
-import os, sys, json, time, urllib.request, urllib.error
+import os, re, sys, json, time, urllib.request, urllib.error
 
 def main():
     key = os.environ.get("MINIMAX_API_KEY")
@@ -36,6 +36,9 @@ def main():
                     continue
                 if not delta: continue
                 buf += delta; chars += len(delta)
+                # M2.x 会把推理段以 <think>…</think> 混在正文里流回来；正文只保留答案
+                if "<think>" in buf and "</think>" not in buf: continue
+                buf = re.sub(r"<think>.*?</think>\s*", "", buf, flags=re.S)
                 # 按句/行吐出，而不是每个 token 一行，让状态板可读
                 while any(p in buf for p in ("\n", "。", "！", "？")):
                     cut = max(buf.find(p) for p in ("\n", "。", "！", "？") if p in buf) + 1
